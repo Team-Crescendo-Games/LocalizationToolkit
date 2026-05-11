@@ -15,3 +15,7 @@ docs/
 .pytest_cache
 __pycache__
 *.egg-info/
+
+# Node / Vite
+node_modules/
+dist/
