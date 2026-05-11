@@ -1,0 +1,3 @@
+﻿key,description,max_length,placeholders,en,fr,it,de,es-ES,ja,ko,pl,zh-Hans,es-419,zh-Hant,pt-BR,ru
+hud.score,HUD score readout. {score} is an integer.,,{score},Score: {score},Score : {score},,,,,,,,,,,
+menu.start,Main menu — primary CTA button.,16,,Start Game,Commencer,,,,スタート,,,,,,,

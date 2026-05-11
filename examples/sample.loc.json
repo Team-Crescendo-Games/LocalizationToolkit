@@ -1,0 +1,24 @@
+{
+  "formatVersion": "1.0",
+  "sourceLocale": "en",
+  "strings": {
+    "menu.start": {
+      "description": "Main menu — primary CTA button.",
+      "maxLength": 16,
+      "placeholders": [],
+      "translations": {
+        "en": "Start Game",
+        "fr": "Commencer",
+        "ja": "スタート"
+      }
+    },
+    "hud.score": {
+      "description": "HUD score readout. {score} is an integer.",
+      "placeholders": ["{score}"],
+      "translations": {
+        "en": "Score: {score}",
+        "fr": "Score : {score}"
+      }
+    }
+  }
+}

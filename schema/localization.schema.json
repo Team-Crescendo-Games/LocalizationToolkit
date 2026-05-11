@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/localization.schema.json",
+  "title": "Localization File",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "sourceLocale", "strings"],
+  "properties": {
+    "formatVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"
+    },
+    "sourceLocale": {
+      "type": "string"
+    },
+    "strings": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description", "translations"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxLength": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "placeholders": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true,
+            "default": []
+          },
+          "translations": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

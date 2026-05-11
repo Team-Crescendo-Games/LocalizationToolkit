@@ -10,3 +10,8 @@ docs/
 .DS_Store
 .idea/
 .vscode/
+
+.venv
+.pytest_cache
+__pycache__
+*.egg-info/
