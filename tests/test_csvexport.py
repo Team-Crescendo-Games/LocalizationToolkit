@@ -50,7 +50,7 @@ def test_csv_header_columns_are_in_locale_order(tmp_path, write_loc):
     header = text.splitlines()[0]
     assert header == (
         "key,description,max_length,placeholders,"
-        "en,fr,it,de,es-ES,ja,ko,pl,zh-Hans,es-419,zh-Hant,pt-BR,ru"
+        "en,fr,it,de,es-ES,ja,ko,pl,zh-Hans,es-419,zh-Hant,pt-BR,ru,id,es"
     )
 
 

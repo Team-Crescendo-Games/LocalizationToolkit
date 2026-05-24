@@ -9,7 +9,9 @@ def test_load_locales_returns_catalog_with_expected_codes():
     assert catalog.codes[0] == "en"
     assert "zh-Hans" in catalog.codes
     assert "ru" in catalog.codes
-    assert len(catalog.codes) == 13
+    assert "id" in catalog.codes
+    assert "es" in catalog.codes
+    assert len(catalog.codes) == 15
 
 
 def test_locale_catalog_membership_and_order():
@@ -26,3 +28,5 @@ def test_locale_catalog_name_lookup():
 
     assert catalog.name_for("en") == "English"
     assert catalog.name_for("zh-Hans") == "Simplified Chinese"
+    assert catalog.name_for("id") == "Indonesian"
+    assert catalog.name_for("es") == "Spanish (Latin America default)"
