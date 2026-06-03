@@ -157,6 +157,16 @@ def _semantic_pass(
         for code, text in translations.items():
             if not isinstance(text, str):
                 continue
+            if text == "":
+                issues.append(
+                    Issue(
+                        file=file,
+                        key=key,
+                        severity=Severity.WARN,
+                        message=f"empty translation for locale '{code}'",
+                    )
+                )
+                continue
             if not _placeholders_match(text, placeholders):
                 issues.append(
                     Issue(

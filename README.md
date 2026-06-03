@@ -11,7 +11,6 @@ Python CLIs for game localization JSON files:
 ./scripts/setup.sh    # creates .venv and installs the toolkit + UI + dev deps
 ./scripts/run-json.sh # launches the Streamlit UI (localization JSON)
 ./scripts/run-ink.sh  # launches the Ink dialogue validator SPA
-./scripts/test.sh     # runs the test suite
 ```
 
 `setup.sh` uses `python3.11` by default — override with `PYTHON=python3.12 ./scripts/setup.sh` if needed.
