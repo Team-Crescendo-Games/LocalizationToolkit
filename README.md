@@ -51,6 +51,47 @@ dialogue. Requires Node 18+.
 
 See `ink-app/README.md` for details.
 
+## AI localization (`/localize`)
+
+`/localize` is a Claude Code skill that translates a source `.loc.json` into one
+or more target locales using Claude subagents, with a human-in-the-loop review
+loop. You hand it a creative brief; it dispatches one translation subagent per
+locale (chunked for large files), validates each result, lets you revise per
+locale, and finally merges deterministically.
+
+```text
+/localize examples/sample.loc.json --targets zh-Hans,ja --brief brief.md
+```
+
+- `--targets`: comma-separated locale codes from `schema/locales.json`.
+- `--brief`: a markdown file describing the game, tone, audience, and any
+  do-not-translate terms. The skill reads it and may ask follow-up questions.
+
+It only fills **missing** translations (never overwrites existing ones) and
+writes, beside the source file:
+
+- `sample.zh-Hans.loc.json`, `sample.ja.loc.json` — one per target (source +
+  that one locale). Each is valid against the schema and `locvalidate` in its
+  default (non-strict) mode; it intentionally omits the other catalog locales,
+  so non-strict validation reports those as warnings, not errors.
+- `sample.localized.loc.json` — combined file with all targets (only when more
+  than one target is requested).
+
+## Merge per-language files (`locmerge`)
+
+The combine step is deterministic (pure JSON, no AI) and also available as a
+standalone CLI:
+
+```bash
+source .venv/bin/activate
+locmerge examples/sample.loc.json \
+  -t examples/sample.zh-Hans.loc.json examples/sample.ja.loc.json \
+  -o examples/sample.localized.loc.json
+```
+
+The source file is the structural authority; each `-t` file contributes only its
+non-source-locale translations. CJK is written literally (`ensure_ascii=False`).
+
 ## Test
 
 ```bash
