@@ -4,6 +4,7 @@ Python CLIs for game localization JSON files:
 
 - `locvalidate` — schema + semantic validation
 - `loc2csv` — wide-CSV exporter (one column per locale)
+- `csv2loc` — wide-CSV importer (spreadsheet export → JSON)
 
 ## Quick start
 
@@ -28,12 +29,53 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 locvalidate examples/sample.loc.json
 loc2csv examples/sample.loc.json -o out.csv
+csv2loc out.csv -o roundtrip.loc.json
 ```
 
 Flags:
 
 - `locvalidate --strict` — promote warnings to errors.
 - `locvalidate --source-locale CODE` — override the file's `sourceLocale`.
+- `csv2loc --source-locale CODE` — which column is the source (default `en`).
+
+## CSV import (`csv2loc`)
+
+Turns a translator-facing spreadsheet export into a `.loc.json` the rest of the
+toolkit (and `/localize`) can consume:
+
+```bash
+csv2loc "examples/Memoria Wake Localization - UI Text.csv" -o examples/ui-text.loc.json
+```
+
+Header dialects — both accepted, so a `loc2csv` export round-trips losslessly:
+
+- sheet style, name plus parenthesised code: `Chinese (Simplified)(zh-Hans)`
+- bare canonical codes: `zh-Hans`
+
+Columns named `description`, `max_length`, and `placeholders` (pipe-separated)
+are read as metadata; everything else must resolve to a locale code from
+`schema/locales.json` or the import fails.
+
+Behaviour worth knowing:
+
+- **Blank locale cell → the locale is omitted**, never written as `""`. Absent is
+  what marks a string as still needing translation; `""` reads as "already done"
+  and `/localize` would skip it.
+- **No `description` column → the key is used as the description** (the schema
+  requires a non-empty one) and a warning reports the count. Descriptions are
+  what `/localize` feeds translators, so add the column when you can.
+- **No `placeholders` column → tokens are inferred** from the source cell:
+  `{...}` and `<...>`, in first-appearance order, deduplicated. That covers
+  TextMeshPro markup like `<sprite name="Sprt">` and
+  `<action=UI_Exit, compositeId=0>`, so `locvalidate` then enforces their
+  survival in every translation.
+- Fatal (exit 1, nothing written): missing `key` column, no locale columns, an
+  unrecognised header, an unknown locale code, or a key that violates the schema
+  key pattern.
+- Non-fatal warnings on stderr: duplicate keys (first row wins), rows with no
+  translations at all (skipped), non-integer `max_length` (dropped), and a
+  placeholder repeated within one source string (declared once, since the schema
+  requires unique items).
 
 ## UI
 

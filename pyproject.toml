@@ -24,6 +24,7 @@ ui = [
 [project.scripts]
 locvalidate = "loctoolkit.cli.locvalidate:main"
 loc2csv = "loctoolkit.cli.loc2csv:main"
+csv2loc = "loctoolkit.cli.csv2loc:main"
 locmerge = "loctoolkit.cli.locmerge:main"
 
 [tool.setuptools.packages.find]
