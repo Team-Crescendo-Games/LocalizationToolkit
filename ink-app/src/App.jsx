@@ -135,7 +135,6 @@ function validateInkTags(tags) {
 
 function renderRichText(text) {
   // Parse a small allowed subset of HTML-style tags safely. Strips anything else.
-  const out = [];
   const re = /<\s*\/?\s*([a-zA-Z]+)\s*\/?\s*>/g;
   let cursor = 0;
   const stack = [{ tag: null, children: [] }];
@@ -223,6 +222,38 @@ function bindNoopExternals(story, source) {
   return bound;
 }
 
+function extractKnotNames(source) {
+  const names = [];
+  const re = /^\s*={2,}\s*([A-Za-z_][A-Za-z0-9_]*)/gm;
+  let m;
+  while ((m = re.exec(source)) !== null) {
+    if (!names.includes(m[1])) names.push(m[1]);
+  }
+  return names;
+}
+
+function drainStory(story) {
+  const lines = [];
+  try {
+    while (story.canContinue) {
+      const text = story.Continue();
+      const tags = [...(story.currentTags || [])];
+      if (text && text.trim()) lines.push({ kind: "line", text: text.trim() });
+      if (tags.length) {
+        lines.push({ kind: "tags", tags });
+        const tagErrors = validateInkTags(tags);
+        if (tagErrors.length) {
+          for (const err of tagErrors) lines.push({ kind: "error", text: err });
+          return lines;
+        }
+      }
+    }
+  } catch (e) {
+    lines.push({ kind: "error", text: `[runtime error: ${e?.message ?? e}]` });
+  }
+  return lines;
+}
+
 function compileSource(source) {
   try {
     const story = new Compiler(source).Compile();
@@ -254,37 +285,51 @@ function PlayerPanel({ source }) {
   const [version, setVersion] = useState(0);
   const [transcript, setTranscript] = useState([]);
   const seededFor = useRef(null);
+  const knots = useMemo(() => extractKnotNames(source), [source]);
 
   const continueMax = useCallback(() => {
     if (!story) return;
-    try {
-      const lines = [];
-      while (story.canContinue) {
-        const text = story.Continue();
-        const tags = [...(story.currentTags || [])];
-        if (text && text.trim()) lines.push({ kind: "line", text: text.trim() });
-        if (tags.length) {
-          const tagErrors = validateInkTags(tags);
-          lines.push({ kind: "tags", tags });
-          if (tagErrors.length) {
-            for (const err of tagErrors) {
-              lines.push({ kind: "error", text: err });
-            }
-            setTranscript((t) => [...t, ...lines]);
-            setVersion((v) => v + 1);
-            throw new Error(tagErrors[0]);
-          }
-        }
-      }
-      setTranscript((t) => [...t, ...lines]);
-      setVersion((v) => v + 1);
-    } catch (e) {
-      setTranscript((t) => [
-        ...t,
-        { kind: "error", text: `[runtime error: ${e?.message ?? e}]` },
-      ]);
-    }
+    setTranscript((t) => [...t, ...drainStory(story)]);
+    setVersion((v) => v + 1);
   }, [story]);
+
+  const playKnot = useCallback(
+    (name) => {
+      if (!story) return;
+      story.ResetState();
+      try {
+        story.ChoosePathString(name);
+      } catch (e) {
+        setTranscript([
+          { kind: "knot", text: name },
+          { kind: "error", text: `[cannot enter knot: ${e?.message ?? e}]` },
+        ]);
+        setVersion((v) => v + 1);
+        return;
+      }
+      setTranscript([{ kind: "knot", text: name }, ...drainStory(story)]);
+      setVersion((v) => v + 1);
+    },
+    [story],
+  );
+
+  const playAllKnots = useCallback(() => {
+    if (!story) return;
+    const lines = [];
+    for (const name of knots) {
+      story.ResetState();
+      lines.push({ kind: "knot", text: name });
+      try {
+        story.ChoosePathString(name);
+      } catch (e) {
+        lines.push({ kind: "error", text: `[cannot enter knot: ${e?.message ?? e}]` });
+        continue;
+      }
+      lines.push(...drainStory(story));
+    }
+    setTranscript(lines);
+    setVersion((v) => v + 1);
+  }, [story, knots]);
 
   const reset = useCallback(() => {
     if (!story) return;
@@ -324,28 +369,8 @@ function PlayerPanel({ source }) {
     if (!story) return;
     if (seededFor.current === story) return;
     seededFor.current = story;
-    const lines = [];
-    try {
-      while (story.canContinue) {
-        const text = story.Continue();
-        const tags = [...(story.currentTags || [])];
-        if (text && text.trim()) lines.push({ kind: "line", text: text.trim() });
-        if (tags.length) {
-          const tagErrors = validateInkTags(tags);
-          lines.push({ kind: "tags", tags });
-          if (tagErrors.length) {
-            for (const err of tagErrors) lines.push({ kind: "error", text: err });
-            throw new Error(tagErrors[0]);
-          }
-        }
-      }
-      setTranscript(lines);
-      setVersion((v) => v + 1);
-    } catch (e) {
-      lines.push({ kind: "error", text: `[runtime error: ${e?.message ?? e}]` });
-      setTranscript(lines);
-      setVersion((v) => v + 1);
-    }
+    setTranscript(drainStory(story));
+    setVersion((v) => v + 1);
   }, [story]);
 
   const choose = useCallback(
@@ -444,7 +469,23 @@ function PlayerPanel({ source }) {
           <button className="btn" onClick={reset}>
             Restart
           </button>
+          {knots.length > 1 ? (
+            <button className="btn" onClick={playAllKnots}>
+              Play all knots ({knots.length})
+            </button>
+          ) : null}
         </div>
+
+        {knots.length > 1 ? (
+          <div className="knot-row">
+            <span className="knot-label">Knots</span>
+            {knots.map((name) => (
+              <button key={name} className="btn knot-btn" onClick={() => playKnot(name)}>
+                {name}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="transcript">
@@ -464,6 +505,12 @@ function PlayerPanel({ source }) {
               return (
                 <div key={i} className="line choice-made">
                   {renderRichText(entry.text)}
+                </div>
+              );
+            if (entry.kind === "knot")
+              return (
+                <div key={i} className="line knot-header">
+                  == {entry.text} ==
                 </div>
               );
             if (entry.kind === "tags")

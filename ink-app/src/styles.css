@@ -111,6 +111,26 @@ html, body, #root {
   margin: 8px 0;
 }
 
+.knot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.knot-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.knot-btn {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.75rem;
+}
+
 .banner {
   padding: 10px 12px;
   border-radius: 4px;
@@ -164,6 +184,18 @@ html, body, #root {
   font-size: 0.75rem;
   font-style: italic;
 }
+
+.line.knot-header {
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.line.knot-header:first-child { margin-top: 0; }
 
 .line.choice-made {
   color: var(--accent);
